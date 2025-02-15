@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-ocean text-gray-100 min-h-screen;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-gradient-surface backdrop-blur-sm border border-white/10 rounded-xl shadow-glow;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-ocean-950;
+  }
+  
+  .btn-secondary {
+    @apply bg-ocean-700 hover:bg-ocean-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-ocean-500 focus:ring-offset-2 focus:ring-offset-ocean-950;
+  }
+  
+  .input {
+    @apply bg-ocean-900/50 border border-ocean-700 rounded-lg px-4 py-2 text-white placeholder-ocean-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200;
+  }
+  
+  .badge {
+    @apply px-2 py-1 text-xs font-medium rounded-full;
+  }
+  
+  .badge-blue {
+    @apply bg-primary-500/20 text-primary-300;
+  }
+  
+  .badge-green {
+    @apply bg-green-500/20 text-green-300;
+  }
+  
+  .badge-yellow {
+    @apply bg-yellow-500/20 text-yellow-300;
+  }
+  
+  .badge-red {
+    @apply bg-red-500/20 text-red-300;
+  }
+}

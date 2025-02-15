@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function calculateCommissionRate(level) {
+      return {
+        '1': 0.10,  // 10% for direct referrals
+        '2': 0.05,  // 5% for second level
+        '3': 0.03,  // 3% for third level
+        '4': 0.02,  // 2% for fourth level
+        '5': 0.015, // 1.5% for fifth level
+        '6': 0.01,  // 1% for sixth level
+        '7': 0.005  // 0.5% for seventh level
+      }[level];
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && 
+        (!request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['totalEarnings', 'reputation', 'referralCount']));
+      allow delete: if false;
+    }
+
+    // Referral relationships collection rules
+    match /referral_relationships/{relationshipId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.referrerId == request.auth.uid || 
+         resource.data.referredId == request.auth.uid);
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.referrerId == request.auth.uid &&
+        request.resource.data.level <= 7 &&
+        request.resource.data.commissionRate == calculateCommissionRate(request.resource.data.level) &&
+        request.resource.data.status in ['active', 'inactive'];
+      
+      allow update: if isAuthenticated() &&
+        resource.data.referrerId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status']) &&
+        request.resource.data.status in ['active', 'inactive'];
+      
+      allow delete: if false;
+    }
+
+    // Revenue shares collection rules
+    match /revenue_shares/{shareId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.referrerId == request.auth.uid || 
+         resource.data.referredId == request.auth.uid);
+      
+      // Only cloud functions can create/update revenue shares
+      allow create, update, delete: if false;
+    }
+
+    // Leads collection rules (updated to include referral tracking)
+    match /leads/{leadId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        request.resource.data.birddogId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        isOwner(resource.data.birddogId) || 
+        (resource.data.assignedAgentId == request.auth.uid) ||
+        (resource.data.assignedLenderId == request.auth.uid)
+      );
+      allow delete: if false;
+    }
+  }
+}
